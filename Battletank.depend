@@ -1,0 +1,28 @@
+# depslib dependency file v1.0
+1741868389 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tankmain.cpp
+	<SDL.h>
+	<SDL_image.h>
+	<iostream>
+	<vector>
+	<cmath>
+	<ctime>
+	<cstdlib>
+	<algorithm>
+	"tank.h"
+	"bullet.h"
+	"map.h"
+
+1741867297 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.h
+	<SDL.h>
+
+1741868238 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.h
+	<SDL.h>
+
+1741865973 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.h
+	<SDL.h>
+	<vector>
+
+1741865973 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.cpp
+	"map.h"
+	<iostream>
+

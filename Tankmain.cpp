@@ -1,1 +1,414 @@
+#include <SDL.h>
+#include <SDL_image.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <ctime>
+#include <cstdlib>
+#include <algorithm>
+#include "tank.h"
+#include "bullet.h"
+#include "map.h"
 
+// Constants
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
+const int TANK_WIDTH = 50;
+const int TANK_HEIGHT = 30;
+const int BULLET_WIDTH = 10;
+const int BULLET_HEIGHT = 10;
+const int TANK_SPEED = 3;
+const int BULLET_SPEED = 10;
+const int TURRET_ROTATION_SPEED = 3; // Degrees per frame
+const int HEALTH_BAR_WIDTH = 100;
+const int HEALTH_BAR_HEIGHT = 10;
+
+
+// Global Variables
+SDL_Window* gWindow = nullptr;
+SDL_Renderer* gRenderer = nullptr;
+//TTF_Font* gFont = nullptr;  // Font for displaying text - REMOVED
+
+// Function Prototypes
+bool init();
+void close();
+SDL_Texture* loadTexture(const std::string& filePath);
+void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, SDL_Rect* clip = nullptr, double angle = 0.0, SDL_Point* center = nullptr, SDL_RendererFlip flip = SDL_FLIP_NONE);
+void renderRotatedTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, double angle, SDL_Point* center); //For rendering with rotation
+
+void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, SDL_Texture* bulletTexture, GameMap& gameMap);
+void update(Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
+void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
+bool checkCollision(float x1, float y1, int w1, int h1, float x2, float y2, int w2, int h2);
+
+void drawHealthBar(SDL_Renderer* renderer, int x, int y, int health, int maxHealth, int barWidth, int barHeight);  // New health bar function
+
+  Tank::Tank(float startX, float startY) :
+    x(startX), y(startY), angle(0), turretAngle(0), health(100) {}
+Bullet::Bullet(float startX, float startY, float angle, int ownerID) :
+    x(startX), y(startY), angle(angle), /*texture(bulletTex),*/ isAlive(true), owner(ownerID) {}
+bool init() {
+    bool success = true;
+
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
+        success = false;
+    } else {
+        // Create window
+        gWindow = SDL_CreateWindow("Tank Battle", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+        if (gWindow == nullptr) {
+            std::cerr << "Window creation failed: " << SDL_GetError() << std::endl;
+            success = false;
+        } else {
+            // Create renderer
+            gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
+            if (gRenderer == nullptr) {
+                std::cerr << "Renderer creation failed: " << SDL_GetError() << std::endl;
+                success = false;
+            } else {
+                // Initialize renderer color
+                SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+
+                // Initialize PNG loading
+                int imgFlags = IMG_INIT_PNG;
+                if (!(IMG_Init(imgFlags) & imgFlags)) {
+                    std::cerr << "SDL_image initialization failed: " << IMG_GetError() << std::endl;
+                    success = false;
+                }
+            }
+        }
+    }
+    return success;
+}
+
+void close() {
+    // Destroy renderer
+    SDL_DestroyRenderer(gRenderer);
+    gRenderer = nullptr;
+
+    // Destroy window
+    SDL_DestroyWindow(gWindow);
+    gWindow = nullptr;
+
+    // Quit SDL subsystems
+    IMG_Quit();
+    SDL_Quit();
+}
+
+SDL_Texture* loadTexture(const std::string& filePath) {
+    SDL_Texture* newTexture = nullptr;
+    SDL_Surface* loadedSurface = IMG_Load(filePath.c_str());
+
+    if (loadedSurface == nullptr) {
+        std::cerr << "Unable to load image " << filePath << "! SDL_image Error: " << IMG_GetError() << std::endl;
+    } else {
+        newTexture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
+        if (newTexture == nullptr) {
+            std::cerr << "Unable to create texture from " << filePath << "! SDL Error: " << SDL_GetError() << std::endl;
+        }
+        SDL_FreeSurface(loadedSurface);
+    }
+
+    return newTexture;
+}
+
+void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip) {
+    SDL_Rect renderQuad = {x, y, 0, 0};
+
+    if (clip != nullptr) {
+        renderQuad.w = clip->w;
+        renderQuad.h = clip->h;
+    } else {
+        SDL_QueryTexture(texture, NULL, NULL, &renderQuad.w, &renderQuad.h);
+    }
+    SDL_RenderCopyEx(renderer, texture, clip, &renderQuad, angle, center, flip);
+}
+
+void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
+    // Điều khiển Player 1: W, A, S, D để di chuyển, Q/E để xoay tháp pháo, Space để bắn
+    // Điều khiển Player 2: Up, Left, Down, Right để di chuyển, Numpad 4/6 để xoay tháp pháo, Space để bắn
+
+    //Player 1
+    const Uint8* currentKeyStates = SDL_GetKeyboardState( nullptr );
+
+    float newX1 = player1.x;
+    float newY1 = player1.y;
+    float newAngle1 = player1.angle;
+
+    if( currentKeyStates[ SDL_SCANCODE_W ] )
+    {
+        newX1 += TANK_SPEED * cos((player1.angle + player1.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+        newY1 += TANK_SPEED * sin((player1.angle + player1.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+    }
+    if( currentKeyStates[ SDL_SCANCODE_S ] )
+    {
+        newX1 -= TANK_SPEED * cos((player1.angle + player1.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+        newY1 -= TANK_SPEED * sin((player1.angle + player1.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+    }
+    if( currentKeyStates[ SDL_SCANCODE_A ] )
+    {
+        newAngle1 -= 3;
+    }
+    if( currentKeyStates[ SDL_SCANCODE_D ] )
+    {
+        newAngle1 += 3;
+    }
+    if( currentKeyStates[ SDL_SCANCODE_Q ] )
+    {
+        player1.turretAngle -= TURRET_ROTATION_SPEED;
+    }
+    if( currentKeyStates[ SDL_SCANCODE_E ] )
+    {
+        player1.turretAngle += TURRET_ROTATION_SPEED;
+    }
+
+    //Player 2
+    float newX2 = player2.x;
+    float newY2 = player2.y;
+    float newAngle2 = player2.angle;
+
+    if( currentKeyStates[ SDL_SCANCODE_UP ] )
+    {
+        newX2 += TANK_SPEED * cos((player2.angle + player2.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+        newY2 += TANK_SPEED * sin((player2.angle + player2.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+    }
+    if( currentKeyStates[ SDL_SCANCODE_DOWN ] )
+    {
+        newX2 -= TANK_SPEED * cos((player2.angle + player2.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+        newY2 -= TANK_SPEED * sin((player2.angle + player2.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+    }
+    if( currentKeyStates[ SDL_SCANCODE_LEFT ] )
+    {
+        newAngle2 -= 3;
+    }
+    if( currentKeyStates[ SDL_SCANCODE_RIGHT ] )
+    {
+        newAngle2 += 3;
+    }
+    if( currentKeyStates[ SDL_SCANCODE_KP_4 ] )
+    {
+        player2.turretAngle -= TURRET_ROTATION_SPEED;
+    }
+    if( currentKeyStates[ SDL_SCANCODE_KP_6 ] )
+    {
+        player2.turretAngle += TURRET_ROTATION_SPEED;
+    }
+
+    // Check if the new position is walkable (using GameMap::isWalkable)
+    if (gameMap.isWalkable(newX1, newY1)) {
+        player1.x = newX1;
+        player1.y = newY1;
+        player1.angle = newAngle1;
+    }
+
+    if (gameMap.isWalkable(newX2, newY2)) {
+        player2.x = newX2;
+        player2.y = newY2;
+        player2.angle = newAngle2;
+    }
+
+    // Handle single key press events
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT) {
+            // Handle quitting the game
+            exit(0); // or return false if inside the main loop condition
+        } else if (e.type == SDL_KEYDOWN) {
+            switch (e.key.keysym.sym) {
+                case SDLK_SPACE: {
+                    // Player 1 fire
+                    float bulletStartX = player1.x + (TANK_WIDTH / 2.0f); // Adjust as needed
+                    float bulletStartY = player1.y + (TANK_HEIGHT / 2.0f); // Adjust as needed
+
+                    //Calculate Angle
+                    float angle = player1.angle + player1.turretAngle;
+
+                    bullets.emplace_back(bulletStartX, bulletStartY, angle, 0); //New Angle
+                    break;
+                }
+                case SDLK_KP_0: {
+                    // Player 2 fire
+                    float bulletStartX = player2.x + (TANK_WIDTH / 2.0f); // Adjust as needed
+                    float bulletStartY = player2.y + (TANK_HEIGHT / 2.0f); // Adjust as needed
+                    float angle = player2.angle + player2.turretAngle;
+
+                    //bullets.emplace_back(bulletStartX, bulletStartY, player2.angle + player2.turretAngle, 1); //OLD
+                    bullets.emplace_back(bulletStartX, bulletStartY, angle, 1); //New Angle
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+void update(Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
+    // Cập nhật vị trí đạn
+    for (auto& bullet : bullets) {
+        if (bullet.isAlive) {
+            bullet.x += BULLET_SPEED * cos(bullet.angle * M_PI / 180.0);
+            bullet.y += BULLET_SPEED * sin(bullet.angle * M_PI / 180.0);
+
+            // Kiểm tra đạn ra khỏi biên
+            if (bullet.x < 0 || bullet.x > SCREEN_WIDTH || bullet.y < 0 || bullet.y > SCREEN_HEIGHT) {
+                bullet.isAlive = false;
+            }
+
+            // Kiểm tra va chạm với map (ví dụ: phá hủy đạn khi va vào tường)
+            if (!gameMap.isWalkable(bullet.x, bullet.y)) {
+                bullet.isAlive = false;
+            }
+        }
+    }
+
+    // Kiểm tra va chạm đạn với xe tăng
+    for (auto& bullet : bullets) {
+        if (bullet.isAlive) {
+            if (bullet.owner == 0) { // Đạn của Player 1
+                if (checkCollision(bullet.x, bullet.y, BULLET_WIDTH, BULLET_HEIGHT, player2.x, player2.y, TANK_WIDTH, TANK_HEIGHT)) {
+                    bullet.isAlive = false;
+                    player2.health -= 20; // Điều chỉnh sát thương nếu cần
+                    if (player2.health < 0) player2.health = 0;
+                }
+            } else { // Đạn của Player 2
+                if (checkCollision(bullet.x, bullet.y, BULLET_WIDTH, BULLET_HEIGHT, player1.x, player1.y, TANK_WIDTH, TANK_HEIGHT)) {
+                    bullet.isAlive = false;
+                    player1.health -= 20; // Điều chỉnh sát thương nếu cần
+                    if (player1.health < 0) player1.health = 0;
+                }
+            }
+        }
+    }
+
+    // Xóa các viên đạn đã chết
+    bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [](const Bullet& b) { return !b.isAlive; }), bullets.end());
+}
+void drawHealthBar(SDL_Renderer* renderer, int x, int y, int health, int maxHealth, int barWidth, int barHeight) {
+    // Calculate health percentage
+    float healthPercentage = static_cast<float>(health) / maxHealth;
+
+    // Draw the background of the health bar
+    SDL_Rect backgroundRect = { x, y, barWidth, barHeight };
+    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF); // Black
+    SDL_RenderFillRect(renderer, &backgroundRect);
+
+    // Draw the health portion of the health bar
+    SDL_Rect healthRect = { x, y, static_cast<int>(barWidth * healthPercentage), barHeight };
+    SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xFF); // Green
+    SDL_RenderFillRect(renderer, &healthRect);
+
+    //Draw a border
+    SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF); // White
+    SDL_RenderDrawRect(renderer, &backgroundRect);
+}
+
+void renderBullet(SDL_Renderer* renderer, float x, float y) {
+    // Define the points of the triangle
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White color
+
+    // Draw the triangle (pointing upwards)
+    float halfWidth = BULLET_WIDTH / 2.0f;
+    float halfHeight = BULLET_HEIGHT / 2.0f;
+
+    float x1 = x;
+    float y1 = y - halfHeight; // Top point
+
+    float x2 = x - halfWidth;
+    float y2 = y + halfHeight; // Bottom-left point
+
+    float x3 = x + halfWidth;
+    float y3 = y + halfHeight; // Bottom-right point
+
+    SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+    SDL_RenderDrawLine(renderer, x2, y2, x3, y3);
+    SDL_RenderDrawLine(renderer, x3, y3, x1, y1);
+}
+
+void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
+    // Clear the screen
+    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF); // Black background
+    SDL_RenderClear(renderer);
+
+    // Render the map
+    gameMap.render(renderer);
+
+    // Render tanks - REPLACED WITH SIMPLE RECTANGLES
+    SDL_Rect tankRect1 = { static_cast<int>(player1.x), static_cast<int>(player1.y), TANK_WIDTH, TANK_HEIGHT };
+    SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF); // Red
+    SDL_RenderFillRect(renderer, &tankRect1);
+
+    SDL_Rect tankRect2 = { static_cast<int>(player2.x), static_cast<int>(player2.y), TANK_WIDTH, TANK_HEIGHT };
+    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF); // Blue
+    SDL_RenderFillRect(renderer, &tankRect2);
+
+    // Render bullets - REPLACED WITH WHITE TRIANGLE
+    for (const auto& bullet : bullets) {
+        if (bullet.isAlive) {
+            renderBullet(renderer, bullet.x, bullet.y);
+        }
+    }
+
+    // Display health - REPLACED WITH HEALTH BARS
+    drawHealthBar(renderer, 10, 10, player1.health, 100, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+    drawHealthBar(renderer, SCREEN_WIDTH - HEALTH_BAR_WIDTH - 10, 10, player2.health, 100, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+
+    // Update screen
+    SDL_RenderPresent(renderer);
+}
+
+bool checkCollision(float x1, float y1, int w1, int h1, float x2, float y2, int w2, int h2) {
+    if (x1 < x2 + w2 &&
+        x1 + w1 > x2 &&
+        y1 < y2 + h2 &&
+        y1 + h1 > y2) {
+        return true;
+    }
+    return false;
+}
+
+int main(int argc, char* args[]) {
+    // Initialize SDL and related subsystems
+    if (!init()) {
+        std::cerr << "Initialization failed!" << std::endl;
+        return 1;
+    }
+
+    // Create tanks
+    Tank player1(100, 100); // NEW
+    Tank player2(600, 400); // NEW
+
+    // Create bullets vector
+    std::vector<Bullet> bullets;
+
+    // Create the game map
+    GameMap gameMap(25, 19); // Example: 25x19 tile map
+
+    // Game loop
+    SDL_Event e;
+    bool quit = false;
+    while (!quit) {
+        // Handle events
+        handleInput(e, player1, player2, bullets, gameMap); //Adjusted
+
+        // Update game logic
+        update(player1, player2, bullets, gameMap);
+
+        // Render the scene
+        render(gRenderer, player1, player2, bullets, gameMap);
+
+        // Check for game over condition (e.g., one player's health reaches 0)
+        if (player1.health <= 0 || player2.health <= 0) {
+            quit = true;
+            std::cout << (player1.health <= 0 ? "Player 2 Wins!" : "Player 1 Wins!") << std::endl;
+        }
+
+        // Delay to cap frame rate (optional)
+        SDL_Delay(10);  // Cap to approximately 100 FPS
+    }
+
+    // Clean up and quit
+    close();
+
+    return 0;
+}
