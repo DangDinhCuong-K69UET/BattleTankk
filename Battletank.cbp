@@ -35,6 +35,10 @@
 		<Unit filename="Bullet.h" />
 		<Unit filename="Tank.h" />
 		<Unit filename="Tankmain.cpp" />
+		<Unit filename="bullet.cpp" />
+		<Unit filename="map.cpp" />
+		<Unit filename="map.h" />
+		<Unit filename="tank.cpp" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

@@ -13,40 +13,31 @@
 // Constants
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
-const int TANK_WIDTH = 50;
-const int TANK_HEIGHT = 30;
 const int BULLET_WIDTH = 10;
 const int BULLET_HEIGHT = 10;
-const int TANK_SPEED = 3;
 const int BULLET_SPEED = 10;
-const int TURRET_ROTATION_SPEED = 3; // Degrees per frame
 const int HEALTH_BAR_WIDTH = 100;
 const int HEALTH_BAR_HEIGHT = 10;
-
 
 // Global Variables
 SDL_Window* gWindow = nullptr;
 SDL_Renderer* gRenderer = nullptr;
-//TTF_Font* gFont = nullptr;  // Font for displaying text - REMOVED
 
 // Function Prototypes
 bool init();
 void close();
 SDL_Texture* loadTexture(const std::string& filePath);
 void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, SDL_Rect* clip = nullptr, double angle = 0.0, SDL_Point* center = nullptr, SDL_RendererFlip flip = SDL_FLIP_NONE);
-void renderRotatedTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, double angle, SDL_Point* center); //For rendering with rotation
 
-void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, SDL_Texture* bulletTexture, GameMap& gameMap);
+void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
 void update(Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
 void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
 bool checkCollision(float x1, float y1, int w1, int h1, float x2, float y2, int w2, int h2);
 
 void drawHealthBar(SDL_Renderer* renderer, int x, int y, int health, int maxHealth, int barWidth, int barHeight);  // New health bar function
+void renderBullet(SDL_Renderer* renderer, float x, float y);
 
-  Tank::Tank(float startX, float startY) :
-    x(startX), y(startY), angle(0), turretAngle(0), health(100) {}
-Bullet::Bullet(float startX, float startY, float angle, int ownerID) :
-    x(startX), y(startY), angle(angle), /*texture(bulletTex),*/ isAlive(true), owner(ownerID) {}
+
 bool init() {
     bool success = true;
 
@@ -76,9 +67,11 @@ bool init() {
                     std::cerr << "SDL_image initialization failed: " << IMG_GetError() << std::endl;
                     success = false;
                 }
+
             }
         }
     }
+
     return success;
 }
 
@@ -107,11 +100,13 @@ SDL_Texture* loadTexture(const std::string& filePath) {
         if (newTexture == nullptr) {
             std::cerr << "Unable to create texture from " << filePath << "! SDL Error: " << SDL_GetError() << std::endl;
         }
+
         SDL_FreeSurface(loadedSurface);
     }
 
     return newTexture;
 }
+
 
 void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip) {
     SDL_Rect renderQuad = {x, y, 0, 0};
@@ -122,120 +117,85 @@ void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, S
     } else {
         SDL_QueryTexture(texture, NULL, NULL, &renderQuad.w, &renderQuad.h);
     }
+
     SDL_RenderCopyEx(renderer, texture, clip, &renderQuad, angle, center, flip);
 }
 
 void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
-    // Điều khiển Player 1: W, A, S, D để di chuyển, Q/E để xoay tháp pháo, Space để bắn
-    // Điều khiển Player 2: Up, Left, Down, Right để di chuyển, Numpad 4/6 để xoay tháp pháo, Space để bắn
+    // Player 1 controls: W, A, S, D for movement, Space to fire
+    // Player 2 controls: Up, Left, Down, Right for movement, Space to fire
 
-    //Player 1
     const Uint8* currentKeyStates = SDL_GetKeyboardState( nullptr );
 
-    float newX1 = player1.x;
-    float newY1 = player1.y;
-    float newAngle1 = player1.angle;
-
-    if( currentKeyStates[ SDL_SCANCODE_W ] )
-    {
-        newX1 += TANK_SPEED * cos((player1.angle + player1.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
-        newY1 += TANK_SPEED * sin((player1.angle + player1.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+    if( currentKeyStates[ SDL_SCANCODE_W ] ) {
+        player1.move( 0, -TANK_SPEED, gameMap);
     }
-    if( currentKeyStates[ SDL_SCANCODE_S ] )
-    {
-        newX1 -= TANK_SPEED * cos((player1.angle + player1.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
-        newY1 -= TANK_SPEED * sin((player1.angle + player1.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+    if( currentKeyStates[ SDL_SCANCODE_A ] ) {
+        player1.move( -TANK_SPEED, 0, gameMap);
     }
-    if( currentKeyStates[ SDL_SCANCODE_A ] )
-    {
-        newAngle1 -= 3;
+    if( currentKeyStates[ SDL_SCANCODE_S ] ) {
+        player1.move( 0, TANK_SPEED, gameMap);
     }
-    if( currentKeyStates[ SDL_SCANCODE_D ] )
-    {
-        newAngle1 += 3;
+    if( currentKeyStates[ SDL_SCANCODE_D ] ) {
+        player1.move( TANK_SPEED, 0, gameMap);
     }
-    if( currentKeyStates[ SDL_SCANCODE_Q ] )
+      if( currentKeyStates[ SDL_SCANCODE_Q ] )
     {
-        player1.turretAngle -= TURRET_ROTATION_SPEED;
+        player1.angle -= TURRET_ROTATION_SPEED;
     }
     if( currentKeyStates[ SDL_SCANCODE_E ] )
     {
-        player1.turretAngle += TURRET_ROTATION_SPEED;
+        player1.angle += TURRET_ROTATION_SPEED;
     }
 
-    //Player 2
-    float newX2 = player2.x;
-    float newY2 = player2.y;
-    float newAngle2 = player2.angle;
 
-    if( currentKeyStates[ SDL_SCANCODE_UP ] )
-    {
-        newX2 += TANK_SPEED * cos((player2.angle + player2.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
-        newY2 += TANK_SPEED * sin((player2.angle + player2.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+    if( currentKeyStates[ SDL_SCANCODE_UP ] ) {
+        player2.move( 0, -TANK_SPEED, gameMap);
     }
-    if( currentKeyStates[ SDL_SCANCODE_DOWN ] )
-    {
-        newX2 -= TANK_SPEED * cos((player2.angle + player2.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
-        newY2 -= TANK_SPEED * sin((player2.angle + player2.turretAngle) * M_PI / 180.0); //Sử dụng góc tháp pháo khi di chuyển
+     if( currentKeyStates[ SDL_SCANCODE_LEFT ] ) {
+        player2.move( -TANK_SPEED, 0, gameMap);
     }
-    if( currentKeyStates[ SDL_SCANCODE_LEFT ] )
-    {
-        newAngle2 -= 3;
+    if( currentKeyStates[ SDL_SCANCODE_DOWN ] ) {
+        player2.move( 0, TANK_SPEED, gameMap);
     }
-    if( currentKeyStates[ SDL_SCANCODE_RIGHT ] )
+        if( currentKeyStates[ SDL_SCANCODE_KP_4 ] )
     {
-        newAngle2 += 3;
-    }
-    if( currentKeyStates[ SDL_SCANCODE_KP_4 ] )
-    {
-        player2.turretAngle -= TURRET_ROTATION_SPEED;
+        player2.angle -= TURRET_ROTATION_SPEED;
     }
     if( currentKeyStates[ SDL_SCANCODE_KP_6 ] )
     {
-        player2.turretAngle += TURRET_ROTATION_SPEED;
+        player2.angle += TURRET_ROTATION_SPEED;
+    }
+    if( currentKeyStates[ SDL_SCANCODE_RIGHT ] ) {
+        player2.move( TANK_SPEED, 0, gameMap);
     }
 
-    // Check if the new position is walkable (using GameMap::isWalkable)
-    if (gameMap.isWalkable(newX1, newY1)) {
-        player1.x = newX1;
-        player1.y = newY1;
-        player1.angle = newAngle1;
-    }
-
-    if (gameMap.isWalkable(newX2, newY2)) {
-        player2.x = newX2;
-        player2.y = newY2;
-        player2.angle = newAngle2;
-    }
-
-    // Handle single key press events
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
-            // Handle quitting the game
-            exit(0); // or return false if inside the main loop condition
+            exit(0);
         } else if (e.type == SDL_KEYDOWN) {
             switch (e.key.keysym.sym) {
                 case SDLK_SPACE: {
                     // Player 1 fire
-                    float bulletStartX = player1.x + (TANK_WIDTH / 2.0f); // Adjust as needed
-                    float bulletStartY = player1.y + (TANK_HEIGHT / 2.0f); // Adjust as needed
+                    float bulletStartX = player1.x + (TANK_WIDTH / 2.0f);
+                    float bulletStartY = player1.y + (TANK_HEIGHT / 2.0f);
 
-                    //Calculate Angle
-                    float angle = player1.angle + player1.turretAngle;
+                    float bulletAngle = player1.angle;
 
-                    bullets.emplace_back(bulletStartX, bulletStartY, angle, 0); //New Angle
+                    bullets.emplace_back(bulletStartX, bulletStartY, bulletAngle, 0);
                     break;
                 }
+
                 case SDLK_KP_0: {
                     // Player 2 fire
-                    float bulletStartX = player2.x + (TANK_WIDTH / 2.0f); // Adjust as needed
-                    float bulletStartY = player2.y + (TANK_HEIGHT / 2.0f); // Adjust as needed
-                    float angle = player2.angle + player2.turretAngle;
+                    float bulletStartX = player2.x + (TANK_WIDTH / 2.0f);
+                    float bulletStartY = player2.y + (TANK_HEIGHT / 2.0f);
 
-                    //bullets.emplace_back(bulletStartX, bulletStartY, player2.angle + player2.turretAngle, 1); //OLD
-                    bullets.emplace_back(bulletStartX, bulletStartY, angle, 1); //New Angle
+                       float bulletAngle = player2.angle;
+
+                    bullets.emplace_back(bulletStartX, bulletStartY, bulletAngle, 1);
                     break;
-                }
+                                  }
                 default:
                     break;
             }
@@ -244,46 +204,58 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
 }
 
 void update(Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
-    // Cập nhật vị trí đạn
+    // Update bullet positions
     for (auto& bullet : bullets) {
         if (bullet.isAlive) {
             bullet.x += BULLET_SPEED * cos(bullet.angle * M_PI / 180.0);
             bullet.y += BULLET_SPEED * sin(bullet.angle * M_PI / 180.0);
 
-            // Kiểm tra đạn ra khỏi biên
+            // Check for bullet out of bounds
             if (bullet.x < 0 || bullet.x > SCREEN_WIDTH || bullet.y < 0 || bullet.y > SCREEN_HEIGHT) {
                 bullet.isAlive = false;
             }
 
-            // Kiểm tra va chạm với map (ví dụ: phá hủy đạn khi va vào tường)
-            if (!gameMap.isWalkable(bullet.x, bullet.y)) {
+            // Check for collision with map (example: destroy bullet on wall)
+             int tileX = static_cast<int>(bullet.x / 32); // Assuming tile size of 32
+            int tileY = static_cast<int>(bullet.y / 32);
+            MapTile* tile = gameMap.getTile(tileX, tileY);
+
+            if (tile && tile->type == 1) {
+                // Destroy the wall (set tile type to 0)
+                 tile->type = 0;
+
+              //Adjusts if it hits, bullet takes damange
+               // tile->health -=10;
                 bullet.isAlive = false;
+
             }
+
         }
     }
 
-    // Kiểm tra va chạm đạn với xe tăng
+    // Check for bullet collisions with tanks
     for (auto& bullet : bullets) {
         if (bullet.isAlive) {
-            if (bullet.owner == 0) { // Đạn của Player 1
+            if (bullet.owner == 0) { // Player 1's bullet
                 if (checkCollision(bullet.x, bullet.y, BULLET_WIDTH, BULLET_HEIGHT, player2.x, player2.y, TANK_WIDTH, TANK_HEIGHT)) {
                     bullet.isAlive = false;
-                    player2.health -= 20; // Điều chỉnh sát thương nếu cần
+                    player2.health -= 20; // Adjust damage as needed
                     if (player2.health < 0) player2.health = 0;
                 }
-            } else { // Đạn của Player 2
+            } else { // Player 2's bullet
                 if (checkCollision(bullet.x, bullet.y, BULLET_WIDTH, BULLET_HEIGHT, player1.x, player1.y, TANK_WIDTH, TANK_HEIGHT)) {
                     bullet.isAlive = false;
-                    player1.health -= 20; // Điều chỉnh sát thương nếu cần
+                    player1.health -= 20; // Adjust damage as needed
                     if (player1.health < 0) player1.health = 0;
                 }
             }
         }
     }
 
-    // Xóa các viên đạn đã chết
+    // Remove dead bullets
     bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [](const Bullet& b) { return !b.isAlive; }), bullets.end());
 }
+
 void drawHealthBar(SDL_Renderer* renderer, int x, int y, int health, int maxHealth, int barWidth, int barHeight) {
     // Calculate health percentage
     float healthPercentage = static_cast<float>(health) / maxHealth;

@@ -2,20 +2,23 @@
 #define TANK_H
 
 #include <SDL.h>
-
-// Forward declaration của Bullet (để tránh include vòng)
-struct Bullet;
+class GameMap;  // Forward declaration
 
 struct Tank {
     float x;
     float y;
     float angle; // Tank's facing angle in degrees
-   // SDL_Texture* texture;
-    //SDL_Texture* turretTexture; // REMOVED
-    float turretAngle; // Turret's angle relative to the tank's body
+    float turretAngle; // Angle of the turret relative to the tank body
     int health;
 
-    Tank(float startX, float startY); // Modified Constructor
+    Tank(float startX, float startY);
+    void move(int dx, int dy, GameMap& gameMap);  //Move dx, dy again!
+    void setDirection(int direction);  // New method
 };
+
+extern const int TANK_WIDTH;
+extern const int TANK_HEIGHT;
+extern const int TANK_SPEED;
+extern const int TURRET_ROTATION_SPEED;
 
 #endif
