@@ -33,7 +33,6 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
 void update(Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
 void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
 bool checkCollision(float x1, float y1, int w1, int h1, float x2, float y2, int w2, int h2);
-
 void drawHealthBar(SDL_Renderer* renderer, int x, int y, int health, int maxHealth, int barWidth, int barHeight);  // New health bar function
 void renderBullet(SDL_Renderer* renderer, float x, float y);
 
@@ -106,7 +105,16 @@ SDL_Texture* loadTexture(const std::string& filePath) {
 
     return newTexture;
 }
+bool checkTankCollision(float newX1, float newY1, float newX2, float newY2) {
+    float distanceX = newX1 - newX2;
+    float distanceY = newY1 - newY2;
+    float combinedWidth = TANK_WIDTH * 2; //Total
+    float combinedHeight = TANK_HEIGHT * 2;
 
+        return (abs(distanceX) < combinedWidth/2.0f &&
+        abs(distanceY) < combinedHeight/2.0f);
+
+}
 
 void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip) {
     SDL_Rect renderQuad = {x, y, 0, 0};
@@ -124,50 +132,67 @@ void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, S
 void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
     // Player 1 controls: W, A, S, D for movement, Space to fire
     // Player 2 controls: Up, Left, Down, Right for movement, Space to fire
+    // Lấy trạng thái bàn phím
+    const Uint8* currentKeyStates = SDL_GetKeyboardState(nullptr);
 
-    const Uint8* currentKeyStates = SDL_GetKeyboardState( nullptr );
+    // Kiểm tra di chuyển của player1
+    if (currentKeyStates[SDL_SCANCODE_W]) {
+        float newX = player1.getX();
+        float newY = player1.getY() - TANK_SPEED;
+        if (!checkTankCollision(newX, newY, player2.getX(), player2.getY())) {
+            player1.move(0, -TANK_SPEED, gameMap);
+        }
+    }
+    if (currentKeyStates[SDL_SCANCODE_A]) {
+        float newX = player1.getX() - TANK_SPEED;
+        float newY = player1.getY();
+        if (!checkTankCollision(newX, newY, player2.getX(), player2.getY())) {
+            player1.move(-TANK_SPEED, 0, gameMap);
+        }
+    }
+    if (currentKeyStates[SDL_SCANCODE_S]) {
+        float newX = player1.getX();
+        float newY = player1.getY() + TANK_SPEED;
+        if (!checkTankCollision(newX, newY, player2.getX(), player2.getY())) {
+            player1.move(0, TANK_SPEED, gameMap);
+        }
+    }
+    if (currentKeyStates[SDL_SCANCODE_D]) {
+        float newX = player1.getX() + TANK_SPEED;
+        float newY = player1.getY();
+        if (!checkTankCollision(newX, newY, player2.getX(), player2.getY())) {
+            player1.move(TANK_SPEED, 0, gameMap);
+        }
+    }
 
-    if( currentKeyStates[ SDL_SCANCODE_W ] ) {
-        player1.move( 0, -TANK_SPEED, gameMap);
+    // Kiểm tra di chuyển của player2
+    if (currentKeyStates[SDL_SCANCODE_UP]) {
+        float newX = player2.getX();
+        float newY = player2.getY() - TANK_SPEED;
+        if (!checkTankCollision(newX, newY, player1.getX(), player1.getY())) {
+            player2.move(0, -TANK_SPEED, gameMap);
+        }
     }
-    if( currentKeyStates[ SDL_SCANCODE_A ] ) {
-        player1.move( -TANK_SPEED, 0, gameMap);
+    if (currentKeyStates[SDL_SCANCODE_LEFT]) {
+        float newX = player2.getX() - TANK_SPEED;
+        float newY = player2.getY();
+        if (!checkTankCollision(newX, newY, player1.getX(), player1.getY())) {
+            player2.move(-TANK_SPEED, 0, gameMap);
+        }
     }
-    if( currentKeyStates[ SDL_SCANCODE_S ] ) {
-        player1.move( 0, TANK_SPEED, gameMap);
+    if (currentKeyStates[SDL_SCANCODE_DOWN]) {
+        float newX = player2.getX();
+        float newY = player2.getY() + TANK_SPEED;
+        if (!checkTankCollision(newX, newY, player1.getX(), player1.getY())) {
+            player2.move(0, TANK_SPEED, gameMap);
+        }
     }
-    if( currentKeyStates[ SDL_SCANCODE_D ] ) {
-        player1.move( TANK_SPEED, 0, gameMap);
-    }
-      if( currentKeyStates[ SDL_SCANCODE_Q ] )
-    {
-        player1.angle -= TURRET_ROTATION_SPEED;
-    }
-    if( currentKeyStates[ SDL_SCANCODE_E ] )
-    {
-        player1.angle += TURRET_ROTATION_SPEED;
-    }
-
-
-    if( currentKeyStates[ SDL_SCANCODE_UP ] ) {
-        player2.move( 0, -TANK_SPEED, gameMap);
-    }
-     if( currentKeyStates[ SDL_SCANCODE_LEFT ] ) {
-        player2.move( -TANK_SPEED, 0, gameMap);
-    }
-    if( currentKeyStates[ SDL_SCANCODE_DOWN ] ) {
-        player2.move( 0, TANK_SPEED, gameMap);
-    }
-        if( currentKeyStates[ SDL_SCANCODE_KP_4 ] )
-    {
-        player2.angle -= TURRET_ROTATION_SPEED;
-    }
-    if( currentKeyStates[ SDL_SCANCODE_KP_6 ] )
-    {
-        player2.angle += TURRET_ROTATION_SPEED;
-    }
-    if( currentKeyStates[ SDL_SCANCODE_RIGHT ] ) {
-        player2.move( TANK_SPEED, 0, gameMap);
+    if (currentKeyStates[SDL_SCANCODE_RIGHT]) {
+        float newX = player2.getX() + TANK_SPEED;
+        float newY = player2.getY();
+        if (!checkTankCollision(newX, newY, player1.getX(), player1.getY())) {
+            player2.move(TANK_SPEED, 0, gameMap);
+        }
     }
 
     while (SDL_PollEvent(&e)) {
@@ -186,7 +211,7 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
                     break;
                 }
 
-                case SDLK_KP_0: {
+                case SDLK_k : {
                     // Player 2 fire
                     float bulletStartX = player2.x + (TANK_WIDTH / 2.0f);
                     float bulletStartY = player2.y + (TANK_HEIGHT / 2.0f);
@@ -202,6 +227,7 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
         }
     }
 }
+
 
 void update(Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
     // Update bullet positions

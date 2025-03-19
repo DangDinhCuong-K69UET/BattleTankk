@@ -13,7 +13,9 @@ struct Tank {
 
     Tank(float startX, float startY);
     void move(int dx, int dy, GameMap& gameMap);  //Move dx, dy again!
-    void setDirection(int direction);  // New method
+    void setDirection(int direction);  // New method Tank(float startX, float startY);
+    float getX() const { return x; }
+    float getY() const { return y; }
 };
 
 extern const int TANK_WIDTH;

@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1741945404 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tankmain.cpp
+1742394769 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tankmain.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<iostream>
@@ -12,7 +12,7 @@
 	"bullet.h"
 	"map.h"
 
-1741948194 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.h
+1742394560 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.h
 	<SDL.h>
 
 1741947556 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.h

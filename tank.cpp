@@ -15,6 +15,14 @@ Tank::Tank(float startX, float startY) :
 void Tank::move(int dx, int dy, GameMap& gameMap) {
    float newX = x + dx;
     float newY = y + dy;
+    x += dx;
+    y += dy;
+
+    // Cập nhật turretAngle theo hướng di chuyển
+    if (dx > 0)      turretAngle = 0;    // Đi sang phải
+    else if (dx < 0) turretAngle = 180;  // Đi sang trái
+    else if (dy > 0) turretAngle = 90;   // Đi xuống
+    else if (dy < 0) turretAngle = -90;  // Đi lên
 
     // Check if the new position is walkable
     if (gameMap.isWalkable(newX, newY)) {
