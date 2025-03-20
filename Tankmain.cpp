@@ -141,6 +141,7 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
         float newY = player1.getY() - TANK_SPEED;
         if (!checkTankCollision(newX, newY, player2.getX(), player2.getY())) {
             player1.move(0, -TANK_SPEED, gameMap);
+            player1.setDirection(270);
         }
     }
     if (currentKeyStates[SDL_SCANCODE_A]) {
@@ -148,6 +149,7 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
         float newY = player1.getY();
         if (!checkTankCollision(newX, newY, player2.getX(), player2.getY())) {
             player1.move(-TANK_SPEED, 0, gameMap);
+            player1.setDirection(180);
         }
     }
     if (currentKeyStates[SDL_SCANCODE_S]) {
@@ -155,6 +157,7 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
         float newY = player1.getY() + TANK_SPEED;
         if (!checkTankCollision(newX, newY, player2.getX(), player2.getY())) {
             player1.move(0, TANK_SPEED, gameMap);
+            player1.setDirection(90);
         }
     }
     if (currentKeyStates[SDL_SCANCODE_D]) {
@@ -162,6 +165,7 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
         float newY = player1.getY();
         if (!checkTankCollision(newX, newY, player2.getX(), player2.getY())) {
             player1.move(TANK_SPEED, 0, gameMap);
+            player1.setDirection(0);
         }
     }
 
@@ -171,6 +175,7 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
         float newY = player2.getY() - TANK_SPEED;
         if (!checkTankCollision(newX, newY, player1.getX(), player1.getY())) {
             player2.move(0, -TANK_SPEED, gameMap);
+            player2.setDirection(270);
         }
     }
     if (currentKeyStates[SDL_SCANCODE_LEFT]) {
@@ -178,6 +183,7 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
         float newY = player2.getY();
         if (!checkTankCollision(newX, newY, player1.getX(), player1.getY())) {
             player2.move(-TANK_SPEED, 0, gameMap);
+             player2.setDirection(180);
         }
     }
     if (currentKeyStates[SDL_SCANCODE_DOWN]) {
@@ -185,6 +191,7 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
         float newY = player2.getY() + TANK_SPEED;
         if (!checkTankCollision(newX, newY, player1.getX(), player1.getY())) {
             player2.move(0, TANK_SPEED, gameMap);
+             player2.setDirection(90);
         }
     }
     if (currentKeyStates[SDL_SCANCODE_RIGHT]) {
@@ -192,6 +199,7 @@ void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>
         float newY = player2.getY();
         if (!checkTankCollision(newX, newY, player1.getX(), player1.getY())) {
             player2.move(TANK_SPEED, 0, gameMap);
+             player2.setDirection(0);
         }
     }
 
