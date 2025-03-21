@@ -131,7 +131,7 @@ void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, S
 
 void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
     // Player 1 controls: W, A, S, D for movement, Space to fire
-    // Player 2 controls: Up, Left, Down, Right for movement, Space to fire
+    // Player 2 controls: Up, Left, Down, Right for movement,k to fire
     // Lấy trạng thái bàn phím
     const Uint8* currentKeyStates = SDL_GetKeyboardState(nullptr);
 
