@@ -88,22 +88,44 @@ void close() {
     SDL_Quit();
 }
 
-SDL_Texture* loadTexture(const std::string& filePath) {
-    SDL_Texture* newTexture = nullptr;
-    SDL_Surface* loadedSurface = IMG_Load(filePath.c_str());
+// Hàm tải texture từ file ảnh
+SDL_Texture* loadTexture(const char* filename, SDL_Renderer* renderer) {
+    SDL_Surface* tempSurface = IMG_Load(filename);
+    if (!tempSurface) {
+        std::cout << "Không thể load ảnh: " << IMG_GetError() << std::endl;
+        return nullptr;
+    }
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, tempSurface);
+    SDL_FreeSurface(tempSurface);
+    return texture;
+}
 
-    if (loadedSurface == nullptr) {
-        std::cerr << "Unable to load image " << filePath << "! SDL_image Error: " << IMG_GetError() << std::endl;
-    } else {
-        newTexture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
-        if (newTexture == nullptr) {
-            std::cerr << "Unable to create texture from " << filePath << "! SDL Error: " << SDL_GetError() << std::endl;
+// Hiển thị màn hình chờ
+void showStartScreen(SDL_Renderer* renderer) {
+    SDL_Texture* startScreen = loadTexture("batdau.png", renderer); // Đổi đúng đường dẫn ảnh
+
+    if (!startScreen) return; // Thoát nếu không load được ảnh
+
+    bool waiting = true;
+    SDL_Event event;
+
+    while (waiting) {
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, startScreen, NULL, NULL); // Vẽ ảnh toàn màn hình
+        SDL_RenderPresent(renderer);
+
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                exit(0); // Thoát game nếu bấm nút tắt cửa sổ
+            } else if (event.type == SDL_KEYDOWN) {
+                waiting = false; // Nhấn phím bất kỳ để vào game
+            }
         }
 
-        SDL_FreeSurface(loadedSurface);
+        SDL_Delay(10);
     }
 
-    return newTexture;
+    SDL_DestroyTexture(startScreen);
 }
 bool checkTankCollision(float newX1, float newY1, float newX2, float newY2) {
     float distanceX = newX1 - newX2;
@@ -375,6 +397,16 @@ bool checkCollision(float x1, float y1, int w1, int h1, float x2, float y2, int 
 
 int main(int argc, char* args[]) {
     // Initialize SDL and related subsystems
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window* window = SDL_CreateWindow("Tank Battle", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        std::cout << "Không thể tạo renderer: " << SDL_GetError() << std::endl;
+        return -1;
+    }
+
+    // Hiển thị màn hình chờ trước khi vào game
+    showStartScreen(renderer);
     if (!init()) {
         std::cerr << "Initialization failed!" << std::endl;
         return 1;

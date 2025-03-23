@@ -12,7 +12,7 @@
 	"bullet.h"
 	"map.h"
 
-1742394560 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.h
+1742619733 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.h
 	<SDL.h>
 
 1741947556 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.h
@@ -27,7 +27,7 @@
 	<SDL.h>
 	<iostream>
 
-1742527759 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.cpp
+1742614015 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.cpp
 	"tank.h"
 	"map.h"
 	<cmath>
