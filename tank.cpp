@@ -2,6 +2,7 @@
 #include "map.h"
 #include <cmath>
 #include <iostream>
+#include<SDL_image.h>
 
 // Constants (defined in tank.cpp because they're only used here)
 const int TANK_WIDTH = 50;
@@ -10,8 +11,9 @@ const int TANK_SPEED = 3;
 const int TURRET_ROTATION_SPEED = 3;
 const int TANK_SIZE = 32;
 
-Tank::Tank(float startX, float startY) :
-    x(startX), y(startY), angle(0), turretAngle(0), health(100) {}
+Tank::Tank(float startX, float startY)
+    : x(startX), y(startY), angle(0), turretAngle(0), health(100) {}
+
 
 void Tank::move(int dx, int dy, GameMap& gameMap) {
    float newX = x + dx;

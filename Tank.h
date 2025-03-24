@@ -2,15 +2,15 @@
 #define TANK_H
 
 #include <SDL.h>
-class GameMap;  // Forward declaration
+class GameMap;
 
 struct Tank {
     float x;
     float y;
-    float angle; // Tank's facing angle in degrees
+    float angle;
     float turretAngle; // Angle of the turret relative to the tank body
     int health;
-    SDL_Texture* texture;
+
     Tank(float startX, float startY);
     void move(int dx, int dy, GameMap& gameMap);  //Move dx, dy again!
     void setDirection(int direction);  // New method Tank(float startX, float startY);

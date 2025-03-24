@@ -356,19 +356,16 @@ void renderBullet(SDL_Renderer* renderer, float x, float y) {
 void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
     // Clear the screen
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF); // Black background
-    SDL_RenderClear(renderer);
 
-    // Render the map
-    gameMap.render(renderer);
-
-    // Render tanks - REPLACED WITH SIMPLE RECTANGLES
-    SDL_Rect tankRect1 = { static_cast<int>(player1.x), static_cast<int>(player1.y), TANK_WIDTH, TANK_HEIGHT };
+        gameMap.render(renderer);
+       SDL_Rect tankRect1 = { static_cast<int>(player1.x), static_cast<int>(player1.y), TANK_WIDTH, TANK_HEIGHT };
     SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF); // Red
     SDL_RenderFillRect(renderer, &tankRect1);
 
     SDL_Rect tankRect2 = { static_cast<int>(player2.x), static_cast<int>(player2.y), TANK_WIDTH, TANK_HEIGHT };
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF); // Blue
     SDL_RenderFillRect(renderer, &tankRect2);
+
 
     // Render bullets - REPLACED WITH WHITE TRIANGLE
     for (const auto& bullet : bullets) {
@@ -396,36 +393,32 @@ bool checkCollision(float x1, float y1, int w1, int h1, float x2, float y2, int 
 }
 
 int main(int argc, char* args[]) {
-    // Initialize SDL and related subsystems
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* window = SDL_CreateWindow("Tank Battle", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (!renderer) {
-        std::cout << "Không thể tạo renderer: " << SDL_GetError() << std::endl;
-        return -1;
-    }
+    IMG_Init(IMG_INIT_PNG);
 
+    SDL_Window* window = SDL_CreateWindow("Tank Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     // Hiển thị màn hình chờ trước khi vào game
     showStartScreen(renderer);
     if (!init()) {
         std::cerr << "Initialization failed!" << std::endl;
         return 1;
     }
-
+    // Create the game map
+    GameMap gameMap(25, 19); // Example: 25x19 tile map
     // Create tanks
-    Tank player1(100, 100); // NEW
-    Tank player2(600, 400); // NEW
-
+    Tank player1(100, 100);
+    Tank player2(600, 400);
     // Create bullets vector
     std::vector<Bullet> bullets;
 
     // Create the game map
-    GameMap gameMap(25, 19); // Example: 25x19 tile map
 
     // Game loop
     SDL_Event e;
     bool quit = false;
     while (!quit) {
+
         // Handle events
         handleInput(e, player1, player2, bullets, gameMap); //Adjusted
 
@@ -444,7 +437,6 @@ int main(int argc, char* args[]) {
         // Delay to cap frame rate (optional)
         SDL_Delay(10);  // Cap to approximately 100 FPS
     }
-
     // Clean up and quit
     close();
 
