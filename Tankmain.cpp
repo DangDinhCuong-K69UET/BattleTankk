@@ -26,7 +26,6 @@ SDL_Renderer* gRenderer = nullptr;
 // Function Prototypes
 bool init();
 void close();
-SDL_Texture* loadTexture(const std::string& filePath);
 void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, SDL_Rect* clip = nullptr, double angle = 0.0, SDL_Point* center = nullptr, SDL_RendererFlip flip = SDL_FLIP_NONE);
 void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
 void update(Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
@@ -125,6 +124,42 @@ void showStartScreen(SDL_Renderer* renderer) {
     }
 
     SDL_DestroyTexture(startScreen);
+}
+void showVictoryScreen(SDL_Renderer* renderer, const char* imagePath) {
+    SDL_Texture* victoryTexture = NULL;
+    SDL_Surface* victorySurface = IMG_Load(imagePath);
+
+    if (!victorySurface) {
+        printf("Failed to load victory image: %s\n", IMG_GetError());
+        return;
+    }
+
+    victoryTexture = SDL_CreateTextureFromSurface(renderer, victorySurface);
+    SDL_FreeSurface(victorySurface);
+
+    if (!victoryTexture) {
+        printf("Failed to create texture: %s\n", SDL_GetError());
+        return;
+    }
+
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, victoryTexture, NULL, NULL);
+    SDL_RenderPresent(renderer);
+
+    SDL_Event e;
+    bool running = true;
+
+    // Chờ người chơi bấm phím bất kỳ để thoát
+    while (running) {
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT || e.type == SDL_KEYDOWN) {
+                running = false;
+                break;
+            }
+        }
+    }
+
+    SDL_DestroyTexture(victoryTexture);
 }
 bool checkTankCollision(float newX1, float newY1, float newX2, float newY2) {
     float distanceX = newX1 - newX2;
@@ -432,7 +467,13 @@ int main(int argc, char* args[]) {
         // Check for game over condition (e.g., one player's health reaches 0)
         if (player1.health <= 0 || player2.health <= 0) {
             quit = true;
-            std::cout << (player1.health <= 0 ? "Player 2 Wins!" : "Player 1 Wins!") << std::endl;
+            if (player1.health <= 0) {
+                showVictoryScreen(gRenderer, "player1.png");
+                }
+                else if (player2.health <= 0) {
+                showVictoryScreen(gRenderer, "player2.png");
+                    }
+            //std::cout << (player1.health <= 0 ? "Player 2 Wins!" : "Player 1 Wins!") << std::endl;
         }
 
         // Delay to cap frame rate (optional)
