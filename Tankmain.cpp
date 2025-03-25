@@ -473,7 +473,7 @@ int main(int argc, char* args[]) {
                 else if (player2.health <= 0) {
                 showVictoryScreen(gRenderer, "player2.png");
                     }
-            //std::cout << (player1.health <= 0 ? "Player 2 Wins!" : "Player 1 Wins!") << std::endl;
+
         }
 
         // Delay to cap frame rate (optional)
