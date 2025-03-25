@@ -10,6 +10,8 @@ const int TANK_HEIGHT = 30;
 const int TANK_SPEED = 3;
 const int TURRET_ROTATION_SPEED = 3;
 const int TANK_SIZE = 32;
+const int TILE_SIZE = 32;
+
 
 Tank::Tank(float startX, float startY)
     : x(startX), y(startY), angle(0), turretAngle(0), health(100) {}
@@ -34,7 +36,16 @@ void Tank::move(int dx, int dy, GameMap& gameMap) {
         y = newY;
     }
 }
+void Tank::loadTexture(SDL_Renderer* gRenderer, const char* filePath) {
+    SDL_Surface* tempSurface = IMG_Load(filePath);
+    texture = SDL_CreateTextureFromSurface(gRenderer, tempSurface);
+    SDL_FreeSurface(tempSurface);
+}
+void Tank::render(SDL_Renderer* gRenderer) {
+    SDL_Rect dst = {x, y, 32, 32};  // Giả sử tank có kích thước 50x50
+    SDL_RenderCopyEx(gRenderer, texture, nullptr, &dst, angle, nullptr, SDL_FLIP_NONE);
 
+}
 void Tank::setDirection(int direction) {
 
     direction = direction % 360;

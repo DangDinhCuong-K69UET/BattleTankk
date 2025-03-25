@@ -10,13 +10,15 @@ struct Tank {
     float angle;
     float turretAngle; // Angle of the turret relative to the tank body
     int health;
+    SDL_Texture* texture;
 
     Tank(float startX, float startY);
+    void loadTexture(SDL_Renderer* renderer, const char* filePath);
     void move(int dx, int dy, GameMap& gameMap);  //Move dx, dy again!
     void setDirection(int direction);  // New method Tank(float startX, float startY);
     float getX() const { return x; }
     float getY() const { return y; }
-    void render(SDL_Renderer* renderer);
+    void render(SDL_Renderer* gRenderer);
 };
 
 extern const int TANK_WIDTH;

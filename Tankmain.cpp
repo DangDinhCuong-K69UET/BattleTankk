@@ -28,7 +28,6 @@ bool init();
 void close();
 SDL_Texture* loadTexture(const std::string& filePath);
 void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, SDL_Rect* clip = nullptr, double angle = 0.0, SDL_Point* center = nullptr, SDL_RendererFlip flip = SDL_FLIP_NONE);
-
 void handleInput(SDL_Event& e, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
 void update(Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
 void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap);
@@ -358,13 +357,14 @@ void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bu
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF); // Black background
 
         gameMap.render(renderer);
-       SDL_Rect tankRect1 = { static_cast<int>(player1.x), static_cast<int>(player1.y), TANK_WIDTH, TANK_HEIGHT };
-    SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF); // Red
-    SDL_RenderFillRect(renderer, &tankRect1);
-
-    SDL_Rect tankRect2 = { static_cast<int>(player2.x), static_cast<int>(player2.y), TANK_WIDTH, TANK_HEIGHT };
-    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF); // Blue
-    SDL_RenderFillRect(renderer, &tankRect2);
+    //   SDL_Rect tankRect1 = { static_cast<int>(player1.x), static_cast<int>(player1.y), TANK_WIDTH, TANK_HEIGHT };
+   // SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF); // Red
+   // SDL_RenderFillRect(renderer, &tankRect1);
+    player1.render(gRenderer) ;
+     player2.render(gRenderer) ;
+   // SDL_Rect tankRect2 = { static_cast<int>(player2.x), static_cast<int>(player2.y), TANK_WIDTH, TANK_HEIGHT };
+    //SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF); // Blue
+    //SDL_RenderFillRect(renderer, &tankRect2);
 
 
     // Render bullets - REPLACED WITH WHITE TRIANGLE
@@ -397,18 +397,19 @@ int main(int argc, char* args[]) {
     IMG_Init(IMG_INIT_PNG);
 
     SDL_Window* window = SDL_CreateWindow("Tank Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    // Hiển thị màn hình chờ trước khi vào game
-    showStartScreen(renderer);
+
     if (!init()) {
         std::cerr << "Initialization failed!" << std::endl;
         return 1;
     }
+      showStartScreen(gRenderer);
     // Create the game map
     GameMap gameMap(25, 19); // Example: 25x19 tile map
     // Create tanks
     Tank player1(100, 100);
+    player1.loadTexture(gRenderer, "tank1.png");
     Tank player2(600, 400);
+    player2.loadTexture(gRenderer, "tank2.png");
     // Create bullets vector
     std::vector<Bullet> bullets;
 
