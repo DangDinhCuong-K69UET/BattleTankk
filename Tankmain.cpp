@@ -299,7 +299,30 @@ void update(Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap&
         if (bullet.isAlive) {
             bullet.x += BULLET_SPEED * cos(bullet.angle * M_PI / 180.0);
             bullet.y += BULLET_SPEED * sin(bullet.angle * M_PI / 180.0);
+             if (checkCollision(bullet.x, bullet.y, bullet.x / 32, bullet.y / 32,
+                               gameMap.base1.x * 32, gameMap.base1.y * 32, 64, 64)) {
+                gameMap.base1.health -= 10; // Trụ mất 10 máu mỗi lần trúng đạn
+                bullet.isAlive = false; // Hủy đạn
 
+                if (gameMap.base1.health <= 0) {
+                    showVictoryScreen(gRenderer, "player1.png");
+                      close();
+                    // Có thể thêm logic kết thúc game ở đây
+                }
+            }
+
+            // Kiểm tra nếu đạn bắn vào trụ 2
+            if (checkCollision(bullet.x, bullet.y,bullet.x / 32, bullet.y / 32,
+                               gameMap.base2.x * 32, gameMap.base2.y * 32, 64, 64)) {
+                gameMap.base2.health -= 10;
+                bullet.isAlive = false;
+
+                if (gameMap.base2.health <= 0) {
+                   showVictoryScreen(gRenderer, "player1.png");
+                     close();
+                    // Có thể thêm logic kết thúc game ở đây
+                }
+            }
             // Check for bullet out of bounds
             if (bullet.x < 0 || bullet.x > SCREEN_WIDTH || bullet.y < 0 || bullet.y > SCREEN_HEIGHT) {
                 bullet.isAlive = false;
@@ -365,74 +388,36 @@ void drawHealthBar(SDL_Renderer* renderer, int x, int y, int health, int maxHeal
     SDL_RenderDrawRect(renderer, &backgroundRect);
 }
 
-void renderBullet(SDL_Renderer* renderer, float x, float y) {
-    // Define the points of the triangle
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White color
 
-    // Draw the triangle (pointing upwards)
-    float halfWidth = BULLET_WIDTH / 2.0f;
-    float halfHeight = BULLET_HEIGHT / 2.0f;
-
-    float x1 = x;
-    float y1 = y - halfHeight; // Top point
-
-    float x2 = x - halfWidth;
-    float y2 = y + halfHeight; // Bottom-left point
-
-    float x3 = x + halfWidth;
-    float y3 = y + halfHeight; // Bottom-right point
-
-    SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
-    SDL_RenderDrawLine(renderer, x2, y2, x3, y3);
-    SDL_RenderDrawLine(renderer, x3, y3, x1, y1);
-}
 
 void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
     // Clear the screen
+    SDL_Texture* baseTexture = loadTexture("base.png", renderer);
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF); // Black background
-
-        gameMap.render(renderer);
-    //   SDL_Rect tankRect1 = { static_cast<int>(player1.x), static_cast<int>(player1.y), TANK_WIDTH, TANK_HEIGHT };
-   // SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF); // Red
-   // SDL_RenderFillRect(renderer, &tankRect1);
+    gameMap.render(renderer, baseTexture);
     player1.render(gRenderer) ;
-     player2.render(gRenderer) ;
-   // SDL_Rect tankRect2 = { static_cast<int>(player2.x), static_cast<int>(player2.y), TANK_WIDTH, TANK_HEIGHT };
-    //SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF); // Blue
-    //SDL_RenderFillRect(renderer, &tankRect2);
-
-
+    player2.render(gRenderer) ;
     // Render bullets - REPLACED WITH WHITE TRIANGLE
     for (const auto& bullet : bullets) {
         if (bullet.isAlive) {
             renderBullet(renderer, bullet.x, bullet.y);
         }
     }
-
     // Display health - REPLACED WITH HEALTH BARS
     drawHealthBar(renderer, 10, 10, player1.health, 100, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
     drawHealthBar(renderer, SCREEN_WIDTH - HEALTH_BAR_WIDTH - 10, 10, player2.health, 100, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
-
     // Update screen
     SDL_RenderPresent(renderer);
 }
-
 bool checkCollision(float x1, float y1, int w1, int h1, float x2, float y2, int w2, int h2) {
-    if (x1 < x2 + w2 &&
-        x1 + w1 > x2 &&
-        y1 < y2 + h2 &&
-        y1 + h1 > y2) {
-        return true;
-    }
-    return false;
-}
+    return (x1 < x2 + w2 &&
+            x1 + w1 > x2 &&
+            y1 < y2 + h2 &&
+            y1 + h1 > y2);}
 
 int main(int argc, char* args[]) {
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
-
-    SDL_Window* window = SDL_CreateWindow("Tank Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
-
     if (!init()) {
         std::cerr << "Initialization failed!" << std::endl;
         return 1;
@@ -441,9 +426,9 @@ int main(int argc, char* args[]) {
     // Create the game map
     GameMap gameMap(25, 19); // Example: 25x19 tile map
     // Create tanks
-    Tank player1(100, 100);
+    Tank player1(100, 150);
     player1.loadTexture(gRenderer, "tank1.png");
-    Tank player2(600, 400);
+    Tank player2(700, 450);
     player2.loadTexture(gRenderer, "tank2.png");
     // Create bullets vector
     std::vector<Bullet> bullets;

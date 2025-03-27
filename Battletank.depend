@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1742913927 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tankmain.cpp
+1743069376 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tankmain.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<iostream>
@@ -15,27 +15,29 @@
 1742886100 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.h
 	<SDL.h>
 
-1741947556 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.h
+1743065656 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.h
 	<SDL.h>
 
-1742912579 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.h
+1743069714 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.h
 	<SDL.h>
 	<vector>
 
-1742912579 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.cpp
+1743068922 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.cpp
 	"map.h"
 	<SDL.h>
 	<iostream>
+	<SDL_image.h>
 
-1742886867 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.cpp
+1743069199 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.cpp
 	"tank.h"
 	"map.h"
 	<cmath>
 	<iostream>
 	<SDL_image.h>
 
-1742527224 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.cpp
+1743066720 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.cpp
 	"bullet.h"
+	"map.h"
 
 1742912990 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\batdaukethuc.cpp
 	<SDL.h>

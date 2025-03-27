@@ -42,10 +42,10 @@ void Tank::loadTexture(SDL_Renderer* gRenderer, const char* filePath) {
     SDL_FreeSurface(tempSurface);
 }
 void Tank::render(SDL_Renderer* gRenderer) {
-    SDL_Rect dst = {x, y, 32, 32};  // Giả sử tank có kích thước 50x50
+    SDL_Rect dst = { static_cast<int>(x), static_cast<int>(y), 32, 32 };
     SDL_RenderCopyEx(gRenderer, texture, nullptr, &dst, angle, nullptr, SDL_FLIP_NONE);
-
 }
+
 void Tank::setDirection(int direction) {
 
     direction = direction % 360;
