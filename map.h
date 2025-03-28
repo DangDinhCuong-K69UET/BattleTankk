@@ -30,6 +30,7 @@ public:
      Base base1, base2;
     SDL_Texture* wallTexture;
 
+    void setWallTexture(SDL_Texture* texture);
     int getWidth() const { return mapWidth; }
     int getHeight() const { return mapHeight; }
     MapTile* getTile(int x, int y); // Lấy tile tại vị trí x, y (trả về nullptr nếu ra ngoài map)

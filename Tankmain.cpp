@@ -391,10 +391,11 @@ void drawHealthBar(SDL_Renderer* renderer, int x, int y, int health, int maxHeal
 
 
 void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap& gameMap) {
-    // Clear the screen
+    SDL_Texture* wallTex = loadTexture("stone.png", renderer);
+    gameMap.setWallTexture(wallTex);
     SDL_Texture* baseTexture = loadTexture("base.png", renderer);
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF); // Black background
-    gameMap.render(renderer, baseTexture);
+    gameMap.render(gRenderer, baseTexture);
     player1.render(gRenderer) ;
     player2.render(gRenderer) ;
     // Render bullets - REPLACED WITH WHITE TRIANGLE
@@ -418,6 +419,7 @@ bool checkCollision(float x1, float y1, int w1, int h1, float x2, float y2, int 
 int main(int argc, char* args[]) {
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
+    gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!init()) {
         std::cerr << "Initialization failed!" << std::endl;
         return 1;
