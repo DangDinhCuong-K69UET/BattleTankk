@@ -428,9 +428,9 @@ int main(int argc, char* args[]) {
     // Create the game map
     GameMap gameMap(25, 19); // Example: 25x19 tile map
     // Create tanks
-    Tank player1(100, 150);
+    Tank player1(100, 140);
     player1.loadTexture(gRenderer, "tank1.png");
-    Tank player2(700, 450);
+    Tank player2(700, 445);
     player2.loadTexture(gRenderer, "tank2.png");
     // Create bullets vector
     std::vector<Bullet> bullets;

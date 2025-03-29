@@ -58,7 +58,7 @@ MapTile* GameMap::getTile(int x, int y) {
 }
 void GameMap::setWallTexture(SDL_Texture* texture) {
     if (!texture) {
-        std::cerr << "setWallTexture: Texture bị null!" << std::endl;
+       // std::cerr << "setWallTexture: Texture bị null!" << std::endl;
         return;
     }
     wallTexture = texture;
@@ -96,26 +96,20 @@ bool GameMap::isWalkable(float x, float y) {
     int tileX = static_cast<int>(x) / 32;
     int tileY = static_cast<int>(y) / 32;
 
-    // Kiểm tra nếu ra ngoài bản đồ
-    if (tileX < 0 || tileX >= mapWidth || tileY < 0 || tileY >= mapHeight) {
+    // Chặn xe ra ngoài màn hình
+    if (x < 0 || y < 0 || x >= (mapWidth * 32) || y >= (mapHeight * 32)) {
         return false;
     }
-      for (int dx = 0; dx < 1; dx++) {
-        for (int dy = 0; dy < 1; dy++) {
-            int checkX = tileX + dx;
-            int checkY = tileY + dy;
 
-            if ((checkX >= base1.x && checkX < base1.x + 2 &&
-                 checkY >= base1.y && checkY < base1.y + 2) ||
-                (checkX >= base2.x && checkX < base2.x + 2 &&
-                 checkY >= base2.y && checkY < base2.y + 2)) {
-                return false;
-            }
-        }
+    // Chặn xe đi vào trụ
+    if ((tileX >= base1.x && tileX < base1.x + 2 &&
+         tileY >= base1.y && tileY < base1.y + 2) ||
+        (tileX >= base2.x && tileX < base2.x + 2 &&
+         tileY >= base2.y && tileY < base2.y + 2)) {
+        return false;
     }
 
-
+    // Kiểm tra tường
     MapTile* tile = getTile(tileX, tileY);
-    return (tile != nullptr && tile->type == 0); // Chỉ đi được nếu type == 0 (không phải tường)
+    return (tile && tile->type == 0); // Chỉ đi được nếu không phải tường
 }
-
