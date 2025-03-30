@@ -1,5 +1,8 @@
 #include "map.h"
 #include <SDL.h>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
 #include<SDL_image.h>
 
@@ -69,6 +72,7 @@ void GameMap::setWallTexture(SDL_Texture* texture) {
     }
 }
 
+
 void GameMap::render(SDL_Renderer* renderer, SDL_Texture* baseTexture) {
     for (int y = 0; y < mapHeight; ++y) {
         for (int x = 0; x < mapWidth; ++x) {
@@ -90,6 +94,28 @@ void GameMap::render(SDL_Renderer* renderer, SDL_Texture* baseTexture) {
 
     baseRect = {base2.x * 32, base2.y * 32, 64, 64};
     SDL_RenderCopy(renderer, baseTexture, NULL, &baseRect);
+      SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // Màu xanh lá
+
+
+
+    for (const auto& pack : healthPacks) {
+        if (pack.active) {
+            int cx = pack.x + 16; // Tâm cục máu
+            int cy = pack.y + 16;
+            int thickness = 6; // Độ dày nét của dấu cộng
+            int size = 12; // Độ dài của dấu cộng
+
+            // Vẽ phần ngang (thick rectangle)
+            SDL_Rect horizontal = { cx - size, cy - thickness / 2, size * 2, thickness };
+            SDL_RenderFillRect(renderer, &horizontal);
+
+            // Vẽ phần dọc (thick rectangle)
+            SDL_Rect vertical = { cx - thickness / 2, cy - size, thickness, size * 2 };
+            SDL_RenderFillRect(renderer, &vertical);
+        }
+    }
+
+
 }
 
 bool GameMap::isWalkable(float x, float y) {
@@ -112,4 +138,37 @@ bool GameMap::isWalkable(float x, float y) {
     // Kiểm tra tường
     MapTile* tile = getTile(tileX, tileY);
     return (tile && tile->type == 0); // Chỉ đi được nếu không phải tường
+}
+void GameMap::spawnHealthPack() {
+    int x, y;
+    bool validPosition = false;
+
+    while (!validPosition) {
+        x = (rand() % mapWidth) * 32;
+        y = (rand() % mapHeight) * 32;
+
+        // Kiểm tra xem có đụng tường không
+        MapTile* tile = getTile(x / 32, y / 32);
+        if (tile && tile->type == 0) {
+            validPosition = true;
+        }
+    }
+
+    healthPacks.push_back({x, y, true});
+
+}
+void GameMap::checkTankHealthCollision(Tank& tank) {
+    SDL_Rect tankRect = { static_cast<int>( tank.getX()),static_cast<int> (tank.getY()), 32, 32 }; // Kích thước xe tank
+
+    for (auto& pack : healthPacks) {
+        if (pack.active) {
+            SDL_Rect packRect = { pack.x, pack.y, 32, 32 }; // Kích thước cục máu
+
+            // Kiểm tra va chạm bằng SDL_HasIntersection
+            if (SDL_HasIntersection(&tankRect, &packRect)) {
+                tank.heal(20); // Hồi 20 máu
+                pack.active = false; // Ẩn cục máu
+            }
+        }
+    }
 }

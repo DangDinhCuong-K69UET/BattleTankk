@@ -1,6 +1,6 @@
 #ifndef MAP_H
 #define MAP_H
-
+#include"Tank.h"
 #include <SDL.h>
 #include <vector>
 
@@ -22,6 +22,14 @@ struct Base {
         return { x, y, width, height };
     }
 };
+struct HealthPack {
+    int x, y;
+    bool active;
+
+    SDL_Rect getRect() const {
+        return { x, y, 32, 32 }; // Kích thước 32x32
+    }
+};
 
 class GameMap {
 public:
@@ -36,11 +44,15 @@ public:
     MapTile* getTile(int x, int y); // Lấy tile tại vị trí x, y (trả về nullptr nếu ra ngoài map)
    void render(SDL_Renderer* renderer, SDL_Texture* baseTexture);
     bool isWalkable(float x, float y);  //Kiểm tra xem vị trí có thể đi qua được không
+    void spawnHealthPack() ;
+    void checkTankHealthCollision(Tank& tank) ;
+    std::vector<HealthPack> healthPacks; // Danh sách các cục máu
 
 private:
     int mapWidth;
     int mapHeight;
     std::vector<MapTile> tiles; // Mảng chứa thông tin các ô trên map
+
 
 };
 

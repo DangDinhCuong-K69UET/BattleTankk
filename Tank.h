@@ -12,6 +12,7 @@ struct Tank {
     int health;
     SDL_Texture* texture;
 
+
     Tank(float startX, float startY);
     void loadTexture(SDL_Renderer* renderer, const char* filePath);
     void move(int dx, int dy, GameMap& gameMap);  //Move dx, dy again!
@@ -19,6 +20,7 @@ struct Tank {
     float getX() const { return x; }
     float getY() const { return y; }
     void render(SDL_Renderer* gRenderer);
+    void heal(int amount);
 };
 
 extern const int TANK_WIDTH;

@@ -9,6 +9,7 @@
 #include "tank.h"
 #include "bullet.h"
 #include "map.h"
+#include"hoimau.h"
 
 // Constants
 const int SCREEN_WIDTH = 800;
@@ -171,6 +172,8 @@ bool checkTankCollision(float newX1, float newY1, float newX2, float newY2) {
         abs(distanceY) < combinedHeight/2.0f);
 
 }
+
+
 
 void renderTexture(SDL_Texture* texture, int x, int y, SDL_Renderer* renderer, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip) {
     SDL_Rect renderQuad = {x, y, 0, 0};
@@ -365,6 +368,8 @@ void update(Tank& player1, Tank& player2, std::vector<Bullet>& bullets, GameMap&
         }
     }
 
+    gameMap.checkTankHealthCollision(player1);
+    gameMap.checkTankHealthCollision(player2);
     // Remove dead bullets
     bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [](const Bullet& b) { return !b.isAlive; }), bullets.end());
 }
@@ -410,11 +415,7 @@ void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bu
     // Update screen
     SDL_RenderPresent(renderer);
 }
-bool checkCollision(float x1, float y1, int w1, int h1, float x2, float y2, int w2, int h2) {
-    return (x1 < x2 + w2 &&
-            x1 + w1 > x2 &&
-            y1 < y2 + h2 &&
-            y1 + h1 > y2);}
+
 
 int main(int argc, char* args[]) {
     SDL_Init(SDL_INIT_VIDEO);
@@ -436,11 +437,19 @@ int main(int argc, char* args[]) {
     std::vector<Bullet> bullets;
 
     // Create the game map
+    Uint32 lastSpawnTime = SDL_GetTicks();
+    const Uint32 spawnInterval = 5000; // 10 giây
 
     // Game loop
     SDL_Event e;
     bool quit = false;
     while (!quit) {
+           Uint32 currentTime = SDL_GetTicks();
+
+    if (currentTime - lastSpawnTime >= spawnInterval) {
+        gameMap.spawnHealthPack();
+        lastSpawnTime = currentTime;
+    }
 
         // Handle events
         handleInput(e, player1, player2, bullets, gameMap); //Adjusted

@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1743258548 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tankmain.cpp
+1743343099 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tankmain.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<iostream>
@@ -11,31 +11,37 @@
 	"tank.h"
 	"bullet.h"
 	"map.h"
+	"hoimau.h"
 
-1742886100 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.h
+1743343018 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.h
 	<SDL.h>
 
-1743259552 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.h
+1743259638 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.h
 	<SDL.h>
 
-1743154436 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.h
+1743342868 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.h
+	"Tank.h"
 	<SDL.h>
 	<vector>
 
-1743259034 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.cpp
+1743342950 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.cpp
 	"map.h"
 	<SDL.h>
+	<vector>
+	<cstdlib>
+	<ctime>
 	<iostream>
 	<SDL_image.h>
 
-1743069199 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.cpp
+1743343018 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.cpp
 	"tank.h"
 	"map.h"
+	"hoimau.h"
 	<cmath>
 	<iostream>
 	<SDL_image.h>
 
-1743259552 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.cpp
+1743259638 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.cpp
 	"bullet.h"
 	"map.h"
 
@@ -50,4 +56,13 @@
 1742913370 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\texture.h
 	<SDL.h>
 	<SDL_image.h>
+
+1743341344 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\hoimau.cpp
+	"hoimau.h"
+	<vector>
+	<cstdlib>
+	<ctime>
+	"map.h"
+
+1743341936 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\hoimau.h
 
