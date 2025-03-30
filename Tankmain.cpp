@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <iostream>
+#include<SDL_mixer.h>
 #include <vector>
 #include <cmath>
 #include <ctime>
@@ -9,7 +10,7 @@
 #include "tank.h"
 #include "bullet.h"
 #include "map.h"
-#include"hoimau.h"
+
 
 // Constants
 const int SCREEN_WIDTH = 800;
@@ -98,6 +99,21 @@ SDL_Texture* loadTexture(const char* filename, SDL_Renderer* renderer) {
     SDL_FreeSurface(tempSurface);
     return texture;
 }
+// Hàm khởi tạo và phát nhạc nền
+void playBackgroundMusic(const char* musicPath) {
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        std::cout << "Error initializing SDL_mixer: " << Mix_GetError() << std::endl;
+        return;
+    }
+
+    Mix_Music* bgMusic = Mix_LoadMUS(musicPath);
+    if (!bgMusic) {
+        std::cout << "Failed to load background music: " << Mix_GetError() << std::endl;
+        return;
+    }
+
+    Mix_PlayMusic(bgMusic, -1); // Phát nhạc lặp vô hạn
+}
 
 // Hiển thị màn hình chờ
 void showStartScreen(SDL_Renderer* renderer) {
@@ -161,6 +177,33 @@ void showVictoryScreen(SDL_Renderer* renderer, const char* imagePath) {
     }
 
     SDL_DestroyTexture(victoryTexture);
+}
+void showHowToPlayScreen(SDL_Renderer* renderer) {
+    if (!renderer) return; // Kiểm tra renderer hợp lệ
+
+    SDL_Texture* howToPlayScreen = loadTexture("huongdan.png", renderer); // Load ảnh hướng dẫn
+    if (!howToPlayScreen) {
+        std::cerr << "Failed to load how-to-play screen texture!" << std::endl;
+        return;
+    }
+
+    SDL_Event event;
+    bool waiting = true;
+
+    while (waiting) {
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, howToPlayScreen, NULL, NULL); // Hiển thị toàn màn hình
+        SDL_RenderPresent(renderer);
+
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) exit(0); // Thoát game nếu bấm nút tắt
+            if (event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN) waiting = false; // Bấm phím hoặc chuột để tiếp tục
+        }
+
+        SDL_Delay(5); // Tối ưu CPU
+    }
+
+    SDL_DestroyTexture(howToPlayScreen);
 }
 bool checkTankCollision(float newX1, float newY1, float newX2, float newY2) {
     float distanceX = newX1 - newX2;
@@ -425,7 +468,17 @@ int main(int argc, char* args[]) {
         std::cerr << "Initialization failed!" << std::endl;
         return 1;
     }
+     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+        std::cout << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
+        return -1;
+    }
+
+    // Gọi hàm phát nhạc nền
+    playBackgroundMusic("nhacnen.mp3");
+    Mix_VolumeMusic(10); // Đường dẫn file nhạc
+
       showStartScreen(gRenderer);
+      showHowToPlayScreen(gRenderer);
     // Create the game map
     GameMap gameMap(25, 19); // Example: 25x19 tile map
     // Create tanks

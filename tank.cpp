@@ -1,6 +1,5 @@
 #include "tank.h"
 #include "map.h"
-#include"hoimau.h"
 #include <cmath>
 #include <iostream>
 #include<SDL_image.h>
@@ -12,6 +11,7 @@ const int TANK_SPEED = 3;
 const int TURRET_ROTATION_SPEED = 3;
 const int TANK_SIZE = 32;
 const int TILE_SIZE = 32;
+
 
 
 Tank::Tank(float startX, float startY)

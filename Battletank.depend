@@ -1,8 +1,9 @@
 # depslib dependency file v1.0
-1743343099 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tankmain.cpp
+1743349976 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tankmain.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<iostream>
+	<SDL_mixer.h>
 	<vector>
 	<cmath>
 	<ctime>
@@ -11,20 +12,19 @@
 	"tank.h"
 	"bullet.h"
 	"map.h"
-	"hoimau.h"
 
-1743343018 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.h
+1743350515 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.h
 	<SDL.h>
 
 1743259638 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\bullet.h
 	<SDL.h>
 
-1743342868 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.h
+1743345580 c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.h
 	"Tank.h"
 	<SDL.h>
 	<vector>
 
-1743342950 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.cpp
+1743345612 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\map.cpp
 	"map.h"
 	<SDL.h>
 	<vector>
@@ -33,10 +33,9 @@
 	<iostream>
 	<SDL_image.h>
 
-1743343018 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.cpp
+1743350509 source:c:\users\an huy\onedrive - vnu.edu.vn\documents\code\battletank\battletankk\tank.cpp
 	"tank.h"
 	"map.h"
-	"hoimau.h"
 	<cmath>
 	<iostream>
 	<SDL_image.h>
