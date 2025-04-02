@@ -142,41 +142,61 @@ void showStartScreen(SDL_Renderer* renderer) {
 
     SDL_DestroyTexture(startScreen);
 }
-void showVictoryScreen(SDL_Renderer* renderer, const char* imagePath) {
+// Trả về: -1 (lỗi), 1 (chơi lại), 2 (thoát)
+int showVictoryScreen(SDL_Renderer* renderer, const char* imagePath) {
     SDL_Texture* victoryTexture = NULL;
     SDL_Surface* victorySurface = IMG_Load(imagePath);
 
+    // Kiểm tra xem có tải được ảnh không
     if (!victorySurface) {
-        printf("Failed to load victory image: %s\n", IMG_GetError());
-        return;
+        printf("Không thể tải ảnh chiến thắng: %s\n", IMG_GetError());
+        return -1;  // Trường hợp lỗi
     }
 
+    // Tạo texture từ surface
     victoryTexture = SDL_CreateTextureFromSurface(renderer, victorySurface);
-    SDL_FreeSurface(victorySurface);
+    SDL_FreeSurface(victorySurface);  // Giải phóng surface sau khi dùng xong
 
+    // Kiểm tra xem có tạo được texture không
     if (!victoryTexture) {
-        printf("Failed to create texture: %s\n", SDL_GetError());
-        return;
+        printf("Không thể tạo texture: %s\n", SDL_GetError());
+        return -1;  // Trường hợp lỗi
     }
 
+    // Xóa renderer và vẽ texture lên màn hình
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, victoryTexture, NULL, NULL);
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(renderer);  // Hiển thị lên màn hình
 
     SDL_Event e;
     bool running = true;
+    int result = 0;  // 0: tiếp tục chờ, 1: chơi lại, 2: thoát
 
-    // Chờ người chơi bấm phím bất kỳ để thoát
+    // Vòng lặp sự kiện
     while (running) {
         while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT || e.type == SDL_KEYDOWN) {
+            if (e.type == SDL_QUIT) {  // Khi đóng cửa sổ
+                result = 2;  // Thoát
                 running = false;
-                break;
+            }
+            else if (e.type == SDL_KEYDOWN) {  // Khi nhấn phím
+                switch (e.key.keysym.sym) {
+                    case SDLK_r:    // Nhấn R để chơi lại
+                        result = 1;
+                        running = false;
+                        break;
+                    case SDLK_q:    // Nhấn Q để thoát
+                        result = 2;
+                        running = false;
+                        break;
+                }
             }
         }
     }
 
+    // Giải phóng texture trước khi thoát
     SDL_DestroyTexture(victoryTexture);
+    return result;  // Trả về lựa chọn của người chơi
 }
 void showHowToPlayScreen(SDL_Renderer* renderer) {
     if (!renderer) return; // Kiểm tra renderer hợp lệ
@@ -461,75 +481,102 @@ void render(SDL_Renderer* renderer, Tank& player1, Tank& player2, std::vector<Bu
 
 
 int main(int argc, char* args[]) {
-    SDL_Init(SDL_INIT_VIDEO);
-    IMG_Init(IMG_INIT_PNG);
-    gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (!init()) {
-        std::cerr << "Initialization failed!" << std::endl;
-        return 1;
-    }
-     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
-        std::cout << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
+    // Khởi tạo SDL video
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+        std::cout << "Không thể khởi tạo SDL: " << SDL_GetError() << std::endl;
         return -1;
+    }
+
+    // Khởi tạo SDL_image cho PNG
+    IMG_Init(IMG_INIT_PNG);
+
+    // Tạo renderer (chuyển lên trước để dùng trong các hàm khác)
+    gWindow = SDL_CreateWindow("Tank Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN);
+    gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+    if (!gRenderer || !gWindow) {
+        std::cerr << "Khởi tạo renderer hoặc window thất bại!" << std::endl;
+        return 1;
     }
 
     // Gọi hàm phát nhạc nền
     playBackgroundMusic("nhacnen.mp3");
-    Mix_VolumeMusic(10); // Đường dẫn file nhạc
+    Mix_VolumeMusic(7); // Đặt âm lượng nhạc nền
 
-      showStartScreen(gRenderer);
-      showHowToPlayScreen(gRenderer);
-    // Create the game map
-    GameMap gameMap(25, 19); // Example: 25x19 tile map
-    // Create tanks
+    // Hiển thị màn hình bắt đầu và hướng dẫn
+    showStartScreen(gRenderer);
+    showHowToPlayScreen(gRenderer);
+
+    // Tạo bản đồ game
+    GameMap gameMap(25, 19); // Bản đồ 25x19 ô
+    // Tạo tank cho người chơi
     Tank player1(100, 140);
     player1.loadTexture(gRenderer, "tank1.png");
     Tank player2(700, 445);
     player2.loadTexture(gRenderer, "tank2.png");
-    // Create bullets vector
+    // Tạo vector chứa đạn
     std::vector<Bullet> bullets;
 
-    // Create the game map
+    // Thời gian sinh vật phẩm
     Uint32 lastSpawnTime = SDL_GetTicks();
-    const Uint32 spawnInterval = 5000; // 10 giây
+    const Uint32 spawnInterval = 5000; // Sinh vật phẩm mỗi 5 giây
 
-    // Game loop
+    // Vòng lặp game chính
     SDL_Event e;
     bool quit = false;
+    bool gameRunning = true;
     while (!quit) {
-           Uint32 currentTime = SDL_GetTicks();
+        Uint32 currentTime = SDL_GetTicks();
 
-    if (currentTime - lastSpawnTime >= spawnInterval) {
-        gameMap.spawnHealthPack();
-        lastSpawnTime = currentTime;
-    }
+        if (gameRunning) {
+            // Sinh vật phẩm định kỳ
+            if (currentTime - lastSpawnTime >= spawnInterval) {
+                gameMap.spawnHealthPack();
+                lastSpawnTime = currentTime;
+            }
 
-        // Handle events
-        handleInput(e, player1, player2, bullets, gameMap); //Adjusted
+            // Xử lý input
+            handleInput(e, player1, player2, bullets, gameMap);
 
-        // Update game logic
-        update(player1, player2, bullets, gameMap);
+            // Cập nhật logic game
+            update(player1, player2, bullets, gameMap);
 
-        // Render the scene
-        render(gRenderer, player1, player2, bullets, gameMap);
+            // Vẽ cảnh game
+            render(gRenderer, player1, player2, bullets, gameMap);
 
-        // Check for game over condition (e.g., one player's health reaches 0)
-        if (player1.health <= 0 || player2.health <= 0) {
-            quit = true;
-            if (player1.health <= 0) {
-                showVictoryScreen(gRenderer, "player1.png");
+            // Kiểm tra điều kiện kết thúc game
+            if (player1.health <= 0 || player2.health <= 0) {
+                gameRunning = false;
+                int victoryResult;
+                if (player1.health <= 0) {
+                    victoryResult = showVictoryScreen(gRenderer, "player2.png"); // Player 2 thắng
+                } else {
+                    victoryResult = showVictoryScreen(gRenderer, "player1.png"); // Player 1 thắng
                 }
-                else if (player2.health <= 0) {
-                showVictoryScreen(gRenderer, "player2.png");
-                    }
 
+                // Xử lý lựa chọn sau màn hình chiến thắng
+                if (victoryResult == 1) { // Nhấn R để chơi lại
+                    // Reset game
+                    player1 = Tank(100, 140);
+                    player1.loadTexture(gRenderer, "tank1.png");
+                    player2 = Tank(700, 445);
+                    player2.loadTexture(gRenderer, "tank2.png");
+                    bullets.clear();
+                    gameMap = GameMap(25, 19);
+                    gameRunning = true;
+                } else if (victoryResult == 2) { // Nhấn Q để thoát
+                    quit = true;
+                }
+            }
+
+            // Giới hạn FPS
+            SDL_Delay(10); // Khoảng 100 FPS
         }
-
-        // Delay to cap frame rate (optional)
-        SDL_Delay(10);  // Cap to approximately 100 FPS
     }
-    // Clean up and quit
-    close();
 
+    // Dọn dẹp và thoát
+    close();
+    IMG_Quit();
+    SDL_Quit();
     return 0;
 }
